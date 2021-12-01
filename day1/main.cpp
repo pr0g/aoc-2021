@@ -39,9 +39,4 @@ int main(int argc, char** argv)
   }
 
   std::cout << "part 2: " << increasing_differences(window_numbers) << '\n';
-
-  // std::for_each(window_numbers.begin(), window_numbers.end(), [](auto number) {
-  //   std::cout << number << '\n';
-  // });
-
 }
