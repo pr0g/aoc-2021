@@ -4,15 +4,11 @@
 #include <vector>
 #include <numeric>
 
-int main(int argc, char** argv)
+int increasing_differences(const std::vector<int>& numbers)
 {
-  std::ifstream reader("input.txt");
-  std::vector<int> numbers;
-  for (std::string line; std::getline(reader, line);) {
-    numbers.push_back(std::stoi(line));
-  }
   std::vector<int> differences;
   differences.reserve(numbers.size());
+
   std::adjacent_difference(
     numbers.begin(), numbers.end(), std::back_inserter(differences));
 
@@ -21,5 +17,31 @@ int main(int argc, char** argv)
       return diff > 0;
     });
 
-  std::cout << increasing_count << '\n';
+  return increasing_count;
+}
+
+int main(int argc, char** argv)
+{
+  std::ifstream reader("input.txt");
+  std::vector<int> numbers;
+  for (std::string line; std::getline(reader, line);) {
+    numbers.push_back(std::stoi(line));
+  }
+
+  std::cout << "part 1: " << increasing_differences(numbers) << '\n';
+
+  std::vector<int> window_numbers;
+  auto current = numbers.begin();
+  while (current + 3 <= numbers.end()) {
+    auto sum = std::accumulate(current, current + 3, 0);
+    window_numbers.push_back(sum);
+    current++;
+  }
+
+  std::cout << "part 2: " << increasing_differences(window_numbers) << '\n';
+
+  // std::for_each(window_numbers.begin(), window_numbers.end(), [](auto number) {
+  //   std::cout << number << '\n';
+  // });
+
 }
