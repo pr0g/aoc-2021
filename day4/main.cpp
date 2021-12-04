@@ -5,7 +5,7 @@
 #include <sstream>
 #include <vector>
 
-std::vector<int> str_to_numbers(std::string numbers_str, char delim)
+std::vector<int> str_to_numbers(const std::string& numbers_str, char delim)
 {
   std::istringstream iss(numbers_str);
   std::string item;
@@ -16,7 +16,7 @@ std::vector<int> str_to_numbers(std::string numbers_str, char delim)
   return numbers;
 }
 
-std::vector<int> str_to_numbers_whitespace(std::string numbers_str)
+std::vector<int> str_to_numbers_whitespace(const std::string& numbers_str)
 {
   std::istringstream iss(numbers_str);
   std::string item;
@@ -28,7 +28,7 @@ std::vector<int> str_to_numbers_whitespace(std::string numbers_str)
   return numbers;
 }
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
   std::ifstream reader("input.txt");
 
@@ -37,11 +37,11 @@ int main(int argc, char** argv)
 
   auto random_numbers = str_to_numbers(random_numbers_str, ',');
 
-  for (auto num : random_numbers) {
-    std::cout << num << ' ';
-  }
+  // for (auto num : random_numbers) {
+  //   std::cout << num << ' ';
+  // }
 
-  std::cout << "\n\n";
+  // std::cout << "\n\n";
 
   std::string empty;
   std::getline(reader, empty);
@@ -60,12 +60,12 @@ int main(int argc, char** argv)
   matrices_str.push_back(matrix_str);
 
   // check
-  for (const auto m : matrices_str) {
-    for (const auto row : m) {
-      std::cout << row << '\n';
-    }
-    std::cout << "\n";
-  }
+  // for (const auto& m : matrices_str) {
+  //   for (const auto& row : m) {
+  //     std::cout << row << '\n';
+  //   }
+  //   std::cout << "\n";
+  // }
 
   struct elem_t
   {
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
   for (const auto& m : matrices_str) {
     std::vector<std::vector<elem_t>> matrix;
     for (const auto& row_str : m) {
-      matrix.push_back(std::vector<elem_t>());
+      matrix.emplace_back();
       auto row = str_to_numbers_whitespace(row_str);
       for (auto elem : row) {
         matrix.back().push_back({elem, false});
@@ -89,15 +89,15 @@ int main(int argc, char** argv)
   }
 
   // check
-  for (const auto m : matrices) {
-    for (const auto row : m) {
-      for (const auto elem : row) {
-        std::cout << elem.num << ' ';
-      }
-      std::cout << '\n';
-    }
-    std::cout << "\n";
-  }
+  // for (const auto& m : matrices) {
+  //   for (const auto& row : m) {
+  //     for (const auto elem : row) {
+  //       std::cout << elem.num << ' ';
+  //     }
+  //     std::cout << '\n';
+  //   }
+  //   std::cout << "\n";
+  // }
 
   int first_matching_matrix = -1;
 
@@ -139,7 +139,6 @@ int main(int argc, char** argv)
           matrices[i] = matrices.back();
           matrices.pop_back();
           i--;
-          //goto next;
           break;
         }
       }
@@ -158,17 +157,13 @@ int main(int argc, char** argv)
           matrices[i] = matrices.back();
           matrices.pop_back();
           i--;
-          // goto next;
           break;
         }
       }
     }
-  next:
-    int blah;
   }
-end:
   int sum = 0;
-  for (auto row : first_matching_board) {
+  for (const auto& row : first_matching_board) {
     for (auto elem : row) {
       if (!elem.found) {
         sum += elem.num;
@@ -176,7 +171,7 @@ end:
     }
   }
   int sum2 = 0;
-  for (auto row : last_matching_board) {
+  for (const auto& row : last_matching_board) {
     for (auto elem : row) {
       if (!elem.found) {
         sum2 += elem.num;
