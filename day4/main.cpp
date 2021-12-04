@@ -113,7 +113,22 @@ int main(int argc, char** argv)
       }
     }
 
+    auto row_size = 5;
     for (auto& matrix : matrices) {
+      for (int col = 0; col < row_size; ++col) {
+        bool match = true;
+        for (auto row : matrix) {
+          if (!row[col].found) {
+            match = false;
+          }
+        }
+        if (match) {
+          matching_board = matrix;
+          last_number = random_number;
+          goto bingo;
+        }
+      }
+
       for (auto& row : matrix) {
         if (std::all_of(row.begin(), row.end(), [](const auto& elem) {
               return elem.found;
