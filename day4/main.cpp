@@ -49,11 +49,12 @@ int main(int argc, char** argv)
   std::vector<std::string> matrix_str;
   std::vector<std::vector<std::string>> matrices_str;
   for (std::string line; std::getline(reader, line);) {
-    if (line.empty()) {
+    if (line.empty() && !matrix_str.empty()) {
       matrices_str.push_back(matrix_str);
       matrix_str.clear();
+    } else {
+      matrix_str.push_back(line);
     }
-    matrix_str.push_back(line);
   }
 
   matrices_str.push_back(matrix_str);
@@ -66,7 +67,8 @@ int main(int argc, char** argv)
     std::cout << "\n";
   }
 
-  struct elem_t {
+  struct elem_t
+  {
     int num;
     bool found;
   };
@@ -96,4 +98,44 @@ int main(int argc, char** argv)
     }
     std::cout << "\n";
   }
+
+  int last_number = 0;
+  std::vector<std::vector<elem_t>> matching_board;
+  for (const auto& random_number : random_numbers) {
+    // search all matrices
+    for (auto& matrix : matrices) {
+      for (auto& row : matrix) {
+        for (auto& elem : row) {
+          if (elem.num == random_number) {
+            elem.found = true;
+          }
+        }
+      }
+    }
+
+    for (auto& matrix : matrices) {
+      for (auto& row : matrix) {
+        if (std::all_of(row.begin(), row.end(), [](const auto& elem) {
+              return elem.found;
+            })) {
+          matching_board = matrix;
+          last_number = random_number;
+          goto bingo;
+        }
+      }
+    }
+  }
+
+bingo:
+
+  int sum = 0;
+  for (auto row : matching_board) {
+    for (auto elem : row) {
+      if (!elem.found) {
+        sum += elem.num;
+      }
+    }
+  }
+
+  std::cout << "part 1: " << sum * last_number << '\n';
 }
