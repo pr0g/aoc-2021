@@ -99,8 +99,12 @@ int main(int argc, char** argv)
     std::cout << "\n";
   }
 
-  int last_number = 0;
-  std::vector<std::vector<elem_t>> matching_board;
+  int first_matching_matrix = -1;
+
+  int first_match_last_number = 0;
+  int last_match_last_number = 0;
+  std::vector<std::vector<elem_t>> first_matching_board;
+  std::vector<std::vector<elem_t>> last_matching_board;
   for (const auto& random_number : random_numbers) {
     // search all matrices
     for (auto& matrix : matrices) {
@@ -114,18 +118,29 @@ int main(int argc, char** argv)
     }
 
     auto row_size = 5;
-    for (auto& matrix : matrices) {
+    for (int i = 0; i < matrices.size(); ++i) {
+      auto& matrix = matrices[i];
       for (int col = 0; col < row_size; ++col) {
         bool match = true;
         for (auto row : matrix) {
           if (!row[col].found) {
             match = false;
+            break;
           }
         }
         if (match) {
-          matching_board = matrix;
-          last_number = random_number;
-          goto bingo;
+          if (first_matching_matrix == -1) {
+            first_match_last_number = random_number;
+            first_matching_matrix = i;
+            first_matching_board = matrix;
+          }
+          last_match_last_number = random_number;
+          last_matching_board = matrix;
+          matrices[i] = matrices.back();
+          matrices.pop_back();
+          i--;
+          //goto next;
+          break;
         }
       }
 
@@ -133,24 +148,42 @@ int main(int argc, char** argv)
         if (std::all_of(row.begin(), row.end(), [](const auto& elem) {
               return elem.found;
             })) {
-          matching_board = matrix;
-          last_number = random_number;
-          goto bingo;
+          if (first_matching_matrix == -1) {
+            first_match_last_number = random_number;
+            first_matching_matrix = i;
+            first_matching_board = matrix;
+          }
+          last_match_last_number = random_number;
+          last_matching_board = matrix;
+          matrices[i] = matrices.back();
+          matrices.pop_back();
+          i--;
+          // goto next;
+          break;
         }
       }
     }
+  next:
+    int blah;
   }
-
-bingo:
-
+end:
   int sum = 0;
-  for (auto row : matching_board) {
+  for (auto row : first_matching_board) {
     for (auto elem : row) {
       if (!elem.found) {
         sum += elem.num;
       }
     }
   }
+  int sum2 = 0;
+  for (auto row : last_matching_board) {
+    for (auto elem : row) {
+      if (!elem.found) {
+        sum2 += elem.num;
+      }
+    }
+  }
 
-  std::cout << "part 1: " << sum * last_number << '\n';
+  std::cout << "part 1: " << sum * first_match_last_number << '\n';
+  std::cout << "part 2: " << sum2 * last_match_last_number << '\n';
 }
