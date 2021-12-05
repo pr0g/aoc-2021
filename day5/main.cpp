@@ -101,28 +101,49 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     // std::cout << "end   " << end_x << ' ' << end_y << '\n';
   }
 
-  std::unordered_map<coord_t, int, coord_hash_t> visited_coords;
-  for (const auto& line_segment : line_segments) {
-    if (line_segment.begin.x == line_segment.end.x) {
-      const auto delta = line_segment.end.y - line_segment.begin.y;
-      for (int i = 0; i <= std::abs(delta); ++i) {
-        visited_coords[coord_t{
-          line_segment.begin.x, line_segment.begin.y + (i * sgn(delta))}]++;
+  {
+    std::unordered_map<coord_t, int, coord_hash_t> visited_coords;
+    for (const auto& line_segment : line_segments) {
+      if (line_segment.begin.x == line_segment.end.x) {
+        const auto delta = line_segment.end.y - line_segment.begin.y;
+        for (int i = 0; i <= std::abs(delta); ++i) {
+          visited_coords[coord_t{
+            line_segment.begin.x, line_segment.begin.y + (i * sgn(delta))}]++;
+        }
+      }
+
+      if (line_segment.begin.y == line_segment.end.y) {
+        const auto delta = line_segment.end.x - line_segment.begin.x;
+        for (int i = 0; i <= std::abs(delta); ++i) {
+          visited_coords[coord_t{
+            line_segment.begin.x + (i * sgn(delta)), line_segment.begin.y}]++;
+        }
       }
     }
 
-    if (line_segment.begin.y == line_segment.end.y) {
-      const auto delta = line_segment.end.x - line_segment.begin.x;
-      for (int i = 0; i <= std::abs(delta); ++i) {
-        visited_coords[coord_t{
-          line_segment.begin.x + (i * sgn(delta)), line_segment.begin.y}]++;
-      }
-    }
+    const auto overlap_count = std::count_if(
+      visited_coords.begin(), visited_coords.end(),
+      [](const auto& visited_coord) { return visited_coord.second > 1; });
+
+    std::cout << "part 1: " << overlap_count << '\n';
   }
 
-  const auto overlap_count = std::count_if(
-    visited_coords.begin(), visited_coords.end(),
-    [](const auto& visited_coord) { return visited_coord.second > 1; });
+  {
+    std::unordered_map<coord_t, int, coord_hash_t> visited_coords;
+    for (const auto& line_segment : line_segments) {
+        const auto delta_x = line_segment.end.x - line_segment.begin.x;
+        const auto delta_y = line_segment.end.y - line_segment.begin.y;
+        for (int i = 0; i <= std::max(std::abs(delta_y), std::abs(delta_x)); ++i) {
+          visited_coords[coord_t{
+            line_segment.begin.x + (i * sgn(delta_x)),
+            line_segment.begin.y + (i * sgn(delta_y))}]++;
+        }
+    }
 
-  std::cout << "part 1: " << overlap_count << '\n';
+    const auto overlap_count = std::count_if(
+      visited_coords.begin(), visited_coords.end(),
+      [](const auto& visited_coord) { return visited_coord.second > 1; });
+
+    std::cout << "part 2: " << overlap_count << '\n';
+  }
 }
