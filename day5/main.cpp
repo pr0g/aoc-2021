@@ -3,7 +3,49 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
 #include <vector>
+
+template<typename T>
+int sgn(T val)
+{
+  return (T(0) < val) - (val < T(0));
+}
+
+template<class T>
+inline void hash_combine(std::size_t& seed, const T& v)
+{
+  std::hash<T> hasher;
+  seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+struct coord_t
+{
+  int x;
+  int y;
+};
+
+bool operator==(const coord_t& lhs, const coord_t& rhs)
+{
+  return lhs.x == rhs.x && lhs.y == rhs.y;
+}
+
+struct line_segment_t
+{
+  coord_t begin;
+  coord_t end;
+};
+
+struct coord_hash_t
+{
+  std::size_t operator()(const coord_t& coord) const
+  {
+    std::size_t seed = 0;
+    hash_combine(seed, coord.x);
+    hash_combine(seed, coord.y);
+    return seed;
+  }
+};
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
@@ -17,18 +59,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   // for (const auto& line_segment_str : line_segment_strs) {
   //   std::cout << line_segment_str << '\n';
   // }
-
-  struct coord_t
-  {
-    int x;
-    int y;
-  };
-
-  struct line_segment_t
-  {
-    coord_t begin;
-    coord_t end;
-  };
 
   std::vector<line_segment_t> line_segments;
 
@@ -59,7 +89,40 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       end_y = std::stoi(elem);
     }
 
-    std::cout << "begin " << begin_x << ' ' << begin_y << '\n';
-    std::cout << "end   " << end_x << ' ' << end_y << '\n';
+    coord_t begin_coord{begin_x, begin_y};
+    coord_t end_coord{end_x, end_y};
+
+    line_segment_t line_segment{begin_coord, end_coord};
+
+    line_segments.push_back(line_segment);
+
+    // check
+    // std::cout << "begin " << begin_x << ' ' << begin_y << '\n';
+    // std::cout << "end   " << end_x << ' ' << end_y << '\n';
   }
+
+  std::unordered_map<coord_t, int, coord_hash_t> visited_coords;
+  for (const auto& line_segment : line_segments) {
+    if (line_segment.begin.x == line_segment.end.x) {
+      const auto delta = line_segment.end.y - line_segment.begin.y;
+      for (int i = 0; i <= std::abs(delta); ++i) {
+        visited_coords[coord_t{
+          line_segment.begin.x, line_segment.begin.y + (i * sgn(delta))}]++;
+      }
+    }
+
+    if (line_segment.begin.y == line_segment.end.y) {
+      const auto delta = line_segment.end.x - line_segment.begin.x;
+      for (int i = 0; i <= std::abs(delta); ++i) {
+        visited_coords[coord_t{
+          line_segment.begin.x + (i * sgn(delta)), line_segment.begin.y}]++;
+      }
+    }
+  }
+
+  const auto overlap_count = std::count_if(
+    visited_coords.begin(), visited_coords.end(),
+    [](const auto& visited_coord) { return visited_coord.second > 1; });
+
+  std::cout << "part 1: " << overlap_count << '\n';
 }
