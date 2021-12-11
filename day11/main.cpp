@@ -44,8 +44,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   std::vector<offset_t> offsets = {{-1, -1}, {0, -1}, {1, -1}, {-1, 0},
                                    {1, 0},   {-1, 1}, {0, 1},  {1, 1}};
 
+  int synchronize_step = -1;
   int total_flashes = 0;
-  for (int i = 0; i < 100; ++i) {
+  for (int i = 0; i < 500; ++i) {
     // energy levels increase by 1
     for (int row = 0; row < energies.size(); ++row) {
       for (int col = 0; col < energies.back().size(); ++col) {
@@ -92,21 +93,26 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       energies[r][c] = 0;
     }
 
-    // check
-    // for (const auto& row : energies) {
-    //   for (const auto energy : row) {
-    //     std::cout << energy << ' ';
-    //   }
-    //   std::cout << '\n';
-    // }
+    if (flashes == 100 && synchronize_step == -1) {
+      synchronize_step = i;
+    }
 
-    // std::cout << '\n';
+     // check
+    //  for (const auto& row : energies) {
+    //    for (const auto energy : row) {
+    //      std::cout << energy << ' ';
+    //    }
+    //    std::cout << '\n';
+    //  }
+
+    //  std::cout << '\n';
 
     total_flashes += flashes;
     octopus_flashed.clear();
   }
 
   std::cout << "part 1: " << total_flashes << '\n';
+  std::cout << "part 2: " << synchronize_step + 1 << '\n';
 
   return 0;
 }
