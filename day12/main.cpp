@@ -42,6 +42,34 @@ void recurse(
   }
 }
 
+void recurse2(
+  const node_t* node, std::vector<std::string> path,
+  std::vector<std::vector<std::string>>& paths, bool single_visited_again)
+{
+  bool prev_single_visited = single_visited_again;
+  for (const auto* connection : node->connections) {
+    auto visited =
+      std::find(path.begin(), path.end(), connection->name) != path.end()
+      && !connection->large_cave();
+    const auto skip =
+      visited && (connection->name == "start" || connection->name == "end");
+    if (skip || (visited && single_visited_again)) {
+      continue;
+    }
+    path.push_back(connection->name);
+    if (visited & !connection->large_cave()) {
+      single_visited_again = true;
+    }
+    if (connection->name == "end") {
+      paths.push_back(path);
+    } else {
+      recurse2(connection, path, paths, single_visited_again);
+    }
+    path.pop_back();
+    single_visited_again = prev_single_visited;
+  }
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
   std::ifstream reader("input.txt");
@@ -114,6 +142,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   recurse(&*start, path, paths);
 
   std::cout << "part 1: " << paths.size() << '\n';
+
+  path.clear();
+  paths.clear();
+  path.push_back(start->name);
+  recurse2(&*start, path, paths, false);
+
+  std::cout << "part 2: " << paths.size() << '\n';
 
   return 0;
 }
