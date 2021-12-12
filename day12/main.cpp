@@ -9,6 +9,44 @@
 #include <unordered_set>
 #include <vector>
 
+struct node_t
+{
+  [[nodiscard]] bool large_cave() const
+  {
+    return std::all_of(
+      name.begin(), name.end(), [](const auto a) { return std::isupper(a); });
+  }
+  std::string name;
+  std::vector<node_t*> connections;
+};
+
+void recurse(
+  const node_t* node, std::vector<std::string> path,
+  std::vector<std::vector<std::string>>& paths,
+  std::vector<std::string>& visited)
+{
+  for (const auto* connection : node->connections) {
+    if (
+      std::find(path.begin(), path.end(), connection->name) != path.end()
+      && !connection->large_cave()) {
+      continue;
+    }
+
+    path.push_back(connection->name);
+
+    if (connection->name == "end") {
+      paths.push_back(path);
+      // for (const auto& n : path) {
+      //   std::cout << n << "->";
+      // }
+      // std::cout << '\n';
+    } else {
+      recurse(connection, path, paths, visited);
+    }
+    path.pop_back();
+  }
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
   std::ifstream reader("input.txt");
@@ -35,17 +73,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     connection_pair.end = connection_pair_strs[1];
     connection_pairs.push_back(connection_pair);
   }
-
-  struct node_t
-  {
-    bool is_upper() const
-    {
-      return std::all_of(
-        name.begin(), name.end(), [](const auto a) { return std::isupper(a); });
-    }
-    std::string name;
-    std::vector<node_t*> connections;
-  };
 
   std::vector<node_t> nodes;
   nodes.reserve(connection_pairs.size() * 2);
@@ -79,6 +106,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       end.connections.push_back(&begin);
     }
   }
+
+  // explore
+  auto start = std::find_if(nodes.begin(), nodes.end(), [](const auto& node) {
+    return node.name == "start";
+  });
+
+  std::vector<std::string> visited;
+  std::vector<std::string> path;
+  std::vector<std::vector<std::string>> paths;
+  path.push_back(start->name);
+  visited.push_back(start->name);
+
+  recurse(&*start, path, paths, visited);
+
+  std::cout << "part 1: " << paths.size() << '\n';
 
   return 0;
 }
