@@ -22,8 +22,7 @@ struct node_t
 
 void recurse(
   const node_t* node, std::vector<std::string> path,
-  std::vector<std::vector<std::string>>& paths,
-  std::vector<std::string>& visited)
+  std::vector<std::vector<std::string>>& paths)
 {
   for (const auto* connection : node->connections) {
     if (
@@ -36,12 +35,8 @@ void recurse(
 
     if (connection->name == "end") {
       paths.push_back(path);
-      // for (const auto& n : path) {
-      //   std::cout << n << "->";
-      // }
-      // std::cout << '\n';
     } else {
-      recurse(connection, path, paths, visited);
+      recurse(connection, path, paths);
     }
     path.pop_back();
   }
@@ -112,13 +107,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     return node.name == "start";
   });
 
-  std::vector<std::string> visited;
   std::vector<std::string> path;
   std::vector<std::vector<std::string>> paths;
   path.push_back(start->name);
-  visited.push_back(start->name);
 
-  recurse(&*start, path, paths, visited);
+  recurse(&*start, path, paths);
 
   std::cout << "part 1: " << paths.size() << '\n';
 
