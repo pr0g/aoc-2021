@@ -59,10 +59,10 @@ std::string hex_to_bin(const std::string& hex)
   return binary;
 }
 
-int64_t bin_to_dec(const std::string& bin)
+uint64_t bin_to_dec(const std::string& bin)
 {
-  int64_t binary = 0;
-  int64_t base_2 = 1;
+  uint64_t binary = 0;
+  uint64_t base_2 = 1;
   for (auto digit_it = bin.rbegin(); digit_it != bin.rend(); ++digit_it) {
     if (*digit_it == '1') {
       binary += base_2;
@@ -72,9 +72,10 @@ int64_t bin_to_dec(const std::string& bin)
   return binary;
 }
 
-int64_t process(std::string packet, std::vector<int64_t>& packet_versions)
+uint64_t process(
+  std::string packet, std::vector<uint64_t>& packet_versions, uint64_t& value)
 {
-  int64_t offset = 0;
+  uint64_t offset = 0;
   auto packet_version_str = packet.substr(offset, 3);
   auto packet_version = bin_to_dec(packet_version_str);
   packet_versions.push_back(packet_version);
@@ -95,10 +96,10 @@ int64_t process(std::string packet, std::vector<int64_t>& packet_versions)
         break;
       }
     }
-    int literal_value = bin_to_dec(number_str);
-    int j;
-    j = 0;
+    uint64_t literal_value = bin_to_dec(number_str);
+    value = literal_value;
   } else { // packet
+    std::vector<uint64_t> values;
     auto length_type_id = packet[offset];
     offset += 1;
     if (length_type_id == '0') {
@@ -107,17 +108,42 @@ int64_t process(std::string packet, std::vector<int64_t>& packet_versions)
       offset += 15;
       auto end = offset + total_length_in_bits;
       while (offset < end) {
-        auto remainder =
-          process(packet.substr(offset, total_length_in_bits), packet_versions);
-        offset += remainder;
+        offset += process(
+          packet.substr(offset, total_length_in_bits), packet_versions, value);
+        values.push_back(value);
       }
     } else if (length_type_id == '1') {
       auto number_of_sub_packets_str = packet.substr(offset, 11);
       auto number_of_sub_packets = bin_to_dec(number_of_sub_packets_str);
       offset += 11;
       for (int i = 0; i < number_of_sub_packets; ++i) {
-        offset += process(packet.substr(offset, 10000), packet_versions);
+        offset +=
+          process(packet.substr(offset, packet.size()), packet_versions, value);
+        values.push_back(value);
       }
+    }
+    if (packet_type_id == 0) {
+      value =
+        std::accumulate(values.begin(), values.end(), 0, [](uint64_t acc, uint64_t v) {
+          acc += v;
+          return acc;
+        });
+    } else if (packet_type_id == 1) {
+      value =
+        std::accumulate(values.begin(), values.end(), 1, [](uint64_t acc, uint64_t v) {
+          acc *= v;
+          return acc;
+        });
+    } else if (packet_type_id == 2) {
+      value = *std::min_element(values.begin(), values.end());
+    } else if (packet_type_id == 3) {
+      value = *std::max_element(values.begin(), values.end());
+    } else if (packet_type_id == 5) {
+      value = values[0] > values[1] ? 1 : 0;
+    } else if (packet_type_id == 6) {
+      value = values[0] < values[1] ? 1 : 0;
+    } else if (packet_type_id == 7) {
+      value = values[0] == values[1] ? 1 : 0;
     }
   }
   return offset;
@@ -130,24 +156,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   std::getline(reader, message);
 
   // check
-  // std::cout << message << '\n';
-  std::string binary_rep = hex_to_bin(message);
+  // std::string binary_rep = hex_to_bin(message);
 
   // check
   // std::cout << binary_rep << '\n';
-
-  // first 3 bits, packet version
-  // next 3 bits, packet type id
-  // type id 4 -> literal value (single number), follow packet header
-  // 1 bit, keep reading, 0 bit, end
-  // type id not 4, operator
-  // bit after header, length type id
-  // if 0, next 15 bits are number that represents total length in bits of the
-  // sub packets contained by this packet
-  // if 1, next 11 bits are number that represents number of sub packets
-  // immediately contained
-
-  // std::cout << bin_to_dec(std::string("101001010101011111")) << '\n';
 
   // std::string packet = hex_to_bin("D2FE28");
   // std::string packet = hex_to_bin("38006F45291200");
@@ -156,11 +168,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   // std::string packet = hex_to_bin("C0015000016115A2E0802F182340");
   // std::string packet = hex_to_bin("A0016C880162017C3686B18A3D4780");
   // std::string packet = hex_to_bin("620080001611562C8802118E34");
+
+//  std::string packet = hex_to_bin("C200B40A82");
+//  std::string packet = hex_to_bin("04005AC33890");
+//  std::string packet = hex_to_bin("880086C3E88112");
+//  std::string packet = hex_to_bin("CE00C43D881120");
+//  std::string packet = hex_to_bin("D8005AC2A8F0");
+//  std::string packet = hex_to_bin("F600BC2D8F");
+//  std::string packet = hex_to_bin("9C005AC2F8F0");
+//  std::string packet = hex_to_bin("9C0141080250320F1802104A08");
+
   std::string packet = hex_to_bin(message);
 
-  auto packet_size = packet.size();
-  std::vector<int64_t> packet_versions;
-  auto last = process(packet, packet_versions);
+  uint64_t value;
+  std::vector<uint64_t> packet_versions;
+  process(packet, packet_versions, value);
 
   auto sum = std::accumulate(
     packet_versions.begin(), packet_versions.end(), 0,
@@ -170,4 +192,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     });
 
   std::cout << "part 1: " << sum << '\n';
+
+  std::cout << "part 2: " << value << '\n';
 }
