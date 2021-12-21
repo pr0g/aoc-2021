@@ -27,10 +27,7 @@ int build(pair_t& pair, const std::string& input)
     if (token == '\0') {
       return offset;
     }
-
     if (token == '[') {
-      //      auto next_token = input[offset++];
-      //      if (next_token == '[') {
       if (!right) {
         pair.lhs = std::make_unique<pair_t>();
         if (auto* lhs = std::get_if<std::unique_ptr<pair_t>>(&pair.lhs)) {
@@ -42,11 +39,6 @@ int build(pair_t& pair, const std::string& input)
           offset += build(**rhs, input.substr(offset, input.size()));
         }
       }
-
-      //      } else { // number
-      //      pair.lhs = input[offset++] - '0';
-      //        build(pair, input.substr(offset, input.size()));
-      //      }
     } else if (token == ']') {
       return offset;
     } else if (token == ',') {
@@ -88,9 +80,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   for (std::string line; std::getline(reader, line);) {
     rows.push_back(std::move(line));
   }
-  for (const auto& row : rows) {
-    //    std::cout << row << '\n';
-  }
+
+  // check
+  // for (const auto& row : rows) {
+  //   std::cout << row << '\n';
+  // }
 
   // If any pair is nested inside four pairs,
   // the leftmost such pair explodes.
@@ -99,14 +93,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
   // do explode first s
 
-//  auto example = std::string("[1,2]");
-//  auto example = std::string("[[1,2],3]");
-//  auto example = std::string("[9,[8,7]]");
-//  auto example = std::string("[[1,9],[8,5]]");
-//  auto example = std::string("[[[[1,2],[3,4]],[[5,6],[7,8]]],9]");
-//  auto example = std::string("[[[9,[3,8]],[[0,9],6]],[[[3,7],[4,9]],3]]");
+  // auto example = std::string("[1,2]");
+  // auto example = std::string("[[1,2],3]");
+  // auto example = std::string("[9,[8,7]]");
+  // auto example = std::string("[[1,9],[8,5]]");
+  // auto example = std::string("[[[[1,2],[3,4]],[[5,6],[7,8]]],9]");
+  // auto example = std::string("[[[9,[3,8]],[[0,9],6]],[[[3,7],[4,9]],3]]");
   auto example = std::string("[[[[1,3],[5,3]],[[1,3],[8,7]]],[[[4,9],[6,9]],[[8,2],[7,3]]]]");
-
   example = example.substr(1, example.size() - 2);
 
   pair_t pair;
