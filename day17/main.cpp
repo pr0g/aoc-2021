@@ -42,9 +42,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     return false;
   };
 
+  std::vector<vec2> velocities;
   int overall_highest_point = 0;
-  for (int yv = 0; yv < 500; yv++) {
-    for (int xv = 0; xv < 500; xv++) {
+  for (int yv = -500; yv < 500; yv++) {
+    for (int xv = 0; xv < 1000; xv++) {
       auto projectile = vec2{0, 0};
       auto velocity = vec2{xv, yv};
       int highest_point = 0;
@@ -52,8 +53,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         highest_point = std::max(highest_point, projectile.y);
         projectile = projectile + velocity;
         if (contained(projectile, target_area)) {
+          velocities.push_back(velocity);
           overall_highest_point =
             std::max(highest_point, overall_highest_point);
+            break;
         }
         velocity.x = std::max(0, velocity.x - 1);
         velocity.y -= 1;
@@ -62,4 +65,5 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   }
 
   std::cout << "part 1: " << overall_highest_point << '\n';
+  std::cout << "part 2: " << velocities.size() << '\n';
 }
