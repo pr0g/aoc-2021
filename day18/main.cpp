@@ -83,17 +83,12 @@ struct pair_arr_t
 {
   int number;
   int depth;
-  //  bool neighbor;
 };
 
 void build_array(const pair_t& pair, std::vector<pair_arr_t>& array, int depth)
 {
   if (auto* lhs = std::get_if<std::unique_ptr<pair_t>>(&pair.lhs)) {
     build_array(**lhs, array, depth + 1);
-  }
-  bool neighbor = false;
-  if (std::get_if<int>(&pair.lhs) && std::get_if<int>(&pair.rhs)) {
-    neighbor = true;
   }
   if (auto* lhs = std::get_if<int>(&pair.lhs)) {
     array.push_back(pair_arr_t{*lhs, depth});
@@ -119,23 +114,8 @@ std::vector<pair_arr_t> add_numbers(
   return result;
 }
 
-std::string add_snailfish_number(const std::string& lhs, const std::string& rhs)
-{
-  std::string result;
-  result.append("[");
-  result.append(lhs);
-  result.append(",");
-  result.append(rhs);
-  result.append("]");
-  return result;
-}
-
 void explode_and_split(std::vector<pair_arr_t>& array)
 {
-  for (auto a : array) {
-    std::cout << "n" << a.number << "d" << a.depth << ",";
-  }
-  std::cout << '\n';
   // explode
   bool did_explode;
   bool did_split;
@@ -144,7 +124,7 @@ void explode_and_split(std::vector<pair_arr_t>& array)
     did_split = false;
     for (int i = 0; i < array.size(); ++i) {
       auto depth = array[i].depth;
-      if (array[i].depth == 4 /*&& array[i].neighbor*/) {
+      if (array[i].depth == 4) {
         if (i > 0) {
           array[i - 1].number += array[i].number;
         }
@@ -155,10 +135,6 @@ void explode_and_split(std::vector<pair_arr_t>& array)
         array.erase(array.begin() + i);
         array.insert(array.begin() + i, pair_arr_t{0, depth - 1});
         did_explode = true;
-        for (auto a : array) {
-          std::cout << "n" << a.number << "d" << a.depth << ",";
-        }
-        std::cout << '\n';
         goto end;
       }
     }
@@ -172,15 +148,11 @@ void explode_and_split(std::vector<pair_arr_t>& array)
         array.insert(array.begin() + i, pair_arr_t{right, depth + 1});
         array.insert(array.begin() + i, pair_arr_t{left, depth + 1});
         did_split = true;
-        for (auto a : array) {
-          std::cout << "n" << a.number << "d" << a.depth << ",";
-        }
-        std::cout << '\n';
         goto end;
       }
     }
-end:
-  int blah;
+  end:
+    int blah;
   } while (did_explode || did_split);
 }
 
@@ -193,48 +165,6 @@ std::vector<pair_arr_t> process_row(const std::string& row)
   explode_and_split(array);
   return array;
 }
-
-// std::string convert_to_string(const std::vector<pair_arr_t>& pairs)
-//{
-//   std::string result;
-//   int prev_depth = 0;
-//   result.append("[");
-//   int digit_count = 0;
-//   for (int i = 0; pairs.size(); ++i) {
-//     auto depth = pairs[i].depth;
-//     auto depth_delta = depth - prev_depth;
-//     if (depth_delta == 0) {
-//       result.append(",");
-//       if (digit_count % 2 == 0) {
-//         result.append("[");
-//       }
-//     }
-//     if (depth_delta < 0) {
-//     for (int d = depth_delta; d < 0; ++d) {
-//       result.append("]");
-//     }
-//     result.append(",");
-////    prev_depth += depth_delta;
-////    depth_delta = prev_depth;
-//    }
-//    for (int d = 0; d < depth_delta; ++d) {
-//      result.append("[");
-//    }
-//    result.append(std::to_string(pairs[i].number));
-//    if (depth_delta == 0 && (digit_count % 2 == 0)) {
-//      result.append(",");
-//    }
-//    digit_count++;
-//    //if (depth != prev_depth) {
-//    //  result.append(",");
-//    //} else {
-//    //  result.append("]");
-//    //}
-//    prev_depth = depth;
-//  }
-//  result.append("]");
-//  return result;
-//}
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
@@ -270,9 +200,35 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   //  auto example = std::string("[[6,[5,[4,[3,2]]]],1]");
   //  auto example = std::string("[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]");
   //  auto example = std::string("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]");
-  auto example = std::string("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]");
+  // auto example = std::string("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]");
 
+//  auto example = std::string("[[1,2],[[3,4],5]]");
+//  auto example = std::string("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
+//  auto example = std::string("[[[[1,1],[2,2]],[3,3]],[4,4]]");
+//  auto example = std::string("[[[[3,0],[5,3]],[4,4]],[5,5]]");
+//  auto example = std::string("[[[[5,0],[7,4]],[5,5]],[6,6]]");
+  auto example = std::string("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]");
   auto test = process_row(example);
+
+  int deepest = 0;
+  for (auto number : test) {
+    deepest = std::max(number.depth, deepest);
+  }
+
+  while (deepest >= 0) {
+    for (int i = 0; i < test.size() - 1; ++i) {
+      if (test[i].depth == deepest) {
+        int depth = test[i].depth;
+        auto number = 3 * test[i].number + 2 * test[i + 1].number;
+        test.erase(test.begin() + i);
+        test.erase(test.begin() + i);
+        test.insert(test.begin() + i, {number, depth - 1});
+      }
+    }
+    deepest--;
+  }
+
+  std::cout << test[0].number << '\n';
 
   //  auto test_str = convert_to_string(test);
 
