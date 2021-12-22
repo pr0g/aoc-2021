@@ -249,4 +249,31 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   }
 
   std::cout << "part 1: " << final_sum(number) << '\n';
+
+  int highest_magnitude = 0;
+  for (int o = 0; o < rows.size(); ++o) {
+    for (int i = o + 1; i < rows.size(); ++i) {
+      auto lhs = process_row(rows[o]);
+      auto rhs = process_row(rows[i]);
+      auto combined = add_numbers(lhs, rhs);
+      explode_and_split(combined);
+      auto magnitude = final_sum(combined);
+      if (magnitude > highest_magnitude) {
+        highest_magnitude = magnitude;
+      }
+    }
+  }
+  for (int o = 0; o < rows.size(); ++o) {
+    for (int i = o + 1; i < rows.size(); ++i) {
+      auto lhs = process_row(rows[o]);
+      auto rhs = process_row(rows[i]);
+      auto combined = add_numbers(rhs, lhs);
+      explode_and_split(combined);
+      auto magnitude = final_sum(combined);
+      if (magnitude > highest_magnitude) {
+        highest_magnitude = magnitude;
+      }
+    }
+  }
+  std::cout << "part 2: " << highest_magnitude << '\n';
 }
