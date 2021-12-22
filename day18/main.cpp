@@ -166,6 +166,29 @@ std::vector<pair_arr_t> process_row(const std::string& row)
   return array;
 }
 
+int final_sum(std::vector<pair_arr_t> test)
+{
+  int deepest = 0;
+  for (auto number : test) {
+    deepest = std::max(number.depth, deepest);
+  }
+
+  while (deepest >= 0) {
+    for (int i = 0; i < test.size() - 1; ++i) {
+      if (test[i].depth == deepest) {
+        int depth = test[i].depth;
+        auto number = 3 * test[i].number + 2 * test[i + 1].number;
+        test.erase(test.begin() + i);
+        test.erase(test.begin() + i);
+        test.insert(test.begin() + i, {number, depth - 1});
+      }
+    }
+    deepest--;
+  }
+
+  return test[0].number;
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
   std::ifstream reader("input.txt");
@@ -202,31 +225,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   //  auto example = std::string("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]");
   // auto example = std::string("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]");
 
-//  auto example = std::string("[[1,2],[[3,4],5]]");
-//  auto example = std::string("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
-//  auto example = std::string("[[[[1,1],[2,2]],[3,3]],[4,4]]");
-//  auto example = std::string("[[[[3,0],[5,3]],[4,4]],[5,5]]");
-//  auto example = std::string("[[[[5,0],[7,4]],[5,5]],[6,6]]");
-  auto example = std::string("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]");
+  //  auto example = std::string("[[1,2],[[3,4],5]]");
+  //  auto example = std::string("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
+  //  auto example = std::string("[[[[1,1],[2,2]],[3,3]],[4,4]]");
+  //  auto example = std::string("[[[[3,0],[5,3]],[4,4]],[5,5]]");
+  //  auto example = std::string("[[[[5,0],[7,4]],[5,5]],[6,6]]");
+  auto example =
+    std::string("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]");
   auto test = process_row(example);
-
-  int deepest = 0;
-  for (auto number : test) {
-    deepest = std::max(number.depth, deepest);
-  }
-
-  while (deepest >= 0) {
-    for (int i = 0; i < test.size() - 1; ++i) {
-      if (test[i].depth == deepest) {
-        int depth = test[i].depth;
-        auto number = 3 * test[i].number + 2 * test[i + 1].number;
-        test.erase(test.begin() + i);
-        test.erase(test.begin() + i);
-        test.insert(test.begin() + i, {number, depth - 1});
-      }
-    }
-    deepest--;
-  }
 
   std::cout << test[0].number << '\n';
 
@@ -255,9 +261,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     //    auto combined = process_row(next_number);
     explode_and_split(combined);
     number = combined;
-    int j;
-    j = 0;
   }
+
+  std::cout << final_sum(number) << '\n';
 
   //  for (auto pair_arr : number) {
   //    std::cout << pair_arr.number << ' ' << pair_arr.depth << '\n';
