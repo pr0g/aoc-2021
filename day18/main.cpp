@@ -202,13 +202,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   //   std::cout << row << '\n';
   // }
 
-  // If any pair is nested inside four pairs,
-  // the leftmost such pair explodes.
-  // If any regular number is 10 or greater,
-  // the leftmost such regular number splits.
-
-  // do explode first s
-
   // auto example = std::string("[1,2]");
   // auto example = std::string("[[1,2],3]");
   // auto example = std::string("[9,[8,7]]");
@@ -218,66 +211,42 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   // auto example =
   // std::string("[[[[1,3],[5,3]],[[1,3],[8,7]]],[[[4,9],[6,9]],[[8,2],[7,3]]]]");
 
-  //    auto example = std::string("[[[[[9,8],1],2],3],4]");
+  // auto example = std::string("[[[[[9,8],1],2],3],4]");
   // auto example = std::string("[7,[6,[5,[4,[3,2]]]]]");
-  //  auto example = std::string("[[6,[5,[4,[3,2]]]],1]");
-  //  auto example = std::string("[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]");
-  //  auto example = std::string("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]");
+  // auto example = std::string("[[6,[5,[4,[3,2]]]],1]");
+  // auto example = std::string("[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]");
+  // auto example = std::string("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]");
   // auto example = std::string("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]");
 
-  //  auto example = std::string("[[1,2],[[3,4],5]]");
-  //  auto example = std::string("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
-  //  auto example = std::string("[[[[1,1],[2,2]],[3,3]],[4,4]]");
-  //  auto example = std::string("[[[[3,0],[5,3]],[4,4]],[5,5]]");
-  //  auto example = std::string("[[[[5,0],[7,4]],[5,5]],[6,6]]");
-  auto example =
-    std::string("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]");
-  auto test = process_row(example);
+  // auto example = std::string("[[1,2],[[3,4],5]]");
+  // auto example = std::string("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
+  // auto example = std::string("[[[[1,1],[2,2]],[3,3]],[4,4]]");
+  // auto example = std::string("[[[[3,0],[5,3]],[4,4]],[5,5]]");
+  // auto example = std::string("[[[[5,0],[7,4]],[5,5]],[6,6]]");
+  // auto example =
+  //   std::string("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]");
+  // auto test = process_row(example);
 
-  std::cout << test[0].number << '\n';
-
-  //  auto test_str = convert_to_string(test);
-
-  //  std::cout << test_str << '\n';
+  // auto test_str = convert_to_string(test);
+  // std::cout << test_str << '\n';
 
   //  pair_t pair;
   //  build_tree(pair, example);
   //  print_pair(pair);
 
-  std::cout << '\n';
-
-  //  std::vector<pair_arr_t> array;
-  //  build_array(pair, array, 0);
+  // std::vector<pair_arr_t> array;
+  // build_array(pair, array, 0);
 
   //  auto added = add_snailfish_number("[[[[4,3],4],4],[7,[[8,4],9]]]",
   //  "[1,1]");
 
   auto number = process_row(rows[0]);
-  //  auto prev_number = rows[0];
   for (int i = 1; i < rows.size(); ++i) {
-    //    auto next_number = add_snailfish_number(prev_number, rows[i]);
     auto next_number = process_row(rows[i]);
     auto combined = add_numbers(number, next_number);
-    //    auto combined = process_row(next_number);
     explode_and_split(combined);
     number = combined;
   }
 
-  std::cout << final_sum(number) << '\n';
-
-  //  for (auto pair_arr : number) {
-  //    std::cout << pair_arr.number << ' ' << pair_arr.depth << '\n';
-  //  }
-
-  std::cout << "---\n";
-
-  //  for (auto pair_arr : array) {
-  //    std::cout << pair_arr.number << ' ' << pair_arr.depth << '\n';
-  //  }
+  std::cout << "part 1: " << final_sum(number) << '\n';
 }
-
-// [1,1]
-// [2,2]
-
-// [1,1] + [2,2]
-// [[1,1],[2,2]]
