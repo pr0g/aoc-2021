@@ -67,5 +67,5 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
   auto min = std::min(player1_total_score, player2_total_score);
 
-  std::cout << "part 1: " << min * g_roll_count;
+  std::cout << "part 1: " << min * g_roll_count << '\n';
 }
