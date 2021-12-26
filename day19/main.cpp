@@ -66,4 +66,26 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       std::cout << beacon.x << ',' << beacon.y << ',' << beacon.z << '\n';
     }
   }
+
+  auto vec3_from_vec3i = [](const as::vec3i& v) {
+    return as::vec3(v.x, v.y, v.z);
+  };
+
+  auto vec3i_from_vec3 = [](const as::vec3& v) {
+    return as::vec3i(std::lround(v.x), std::lround(v.y), std::lround(v.z));
+  };
+
+  const float angles[] = {0.0f, 90.0f, 180.0f, 270.0f};
+
+  for (const auto& scanner : scanners) {
+    for (const auto& beacon : scanner.beacons) {
+      for (const auto angle : angles) {
+        auto next_orientation =
+          vec3i_from_vec3(as::mat3_rotation_y(as::radians(angle)) * vec3_from_vec3i(beacon));
+
+        int i;
+        i = 0;
+      }
+    }
+  }
 }
