@@ -51,9 +51,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   }
 
   // check
-  for (const auto& reboot_step : reboot_step_strs) {
-    std::cout << reboot_step << '\n';
-  }
+  // for (const auto& reboot_step : reboot_step_strs) {
+  //   std::cout << reboot_step << '\n';
+  // }
 
   struct reboot_step_t
   {
@@ -91,12 +91,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     reboot_steps.push_back(reboot_step);
   }
 
-  for (const auto& reboot_step : reboot_steps) {
-    std::cout << (reboot_step.on ? "on" : "off") << " - min: ("
-              << reboot_step.min.x << ", " << reboot_step.min.y << ", "
-              << reboot_step.min.z << "), max: (" << reboot_step.max.x << ", "
-              << reboot_step.max.y << ", " << reboot_step.max.z << ")\n";
-  }
+  // for (const auto& reboot_step : reboot_steps) {
+  //   std::cout << (reboot_step.on ? "on" : "off") << " - min: ("
+  //             << reboot_step.min.x << ", " << reboot_step.min.y << ", "
+  //             << reboot_step.min.z << "), max: (" << reboot_step.max.x << ", "
+  //             << reboot_step.max.y << ", " << reboot_step.max.z << ")\n";
+  // }
 
   std::unordered_map<vec3, bool, vec3_hash> cubes;
   for (const auto& reboot_step : reboot_steps) {
