@@ -61,10 +61,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
   }
 
+  int i = 0;
   for (const auto& scanner : scanners) {
+    std::cout << "scanner " << i++ << '\n';
     for (const auto& beacon : scanner.beacons) {
       std::cout << beacon.x << ',' << beacon.y << ',' << beacon.z << '\n';
     }
+    std::cout << '\n';
   }
 
   int beacons = 0;
@@ -106,55 +109,96 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     int count = 0;
   };
 
-  as::mat3 rot1 = as::mat3::identity();
-  as::mat3 rot2 = as::mat3_rotation_z(as::radians(90.0f));
-  as::mat3 rot3 = as::mat3_rotation_z(as::radians(180.0f));
-  as::mat3 rot4 = as::mat3_rotation_z(as::radians(270.0f));
+  std::vector<as::mat3> rotations;
+  {
+    as::mat3 rot1 = as::mat3::identity();
+    as::mat3 rot2 = as::mat3_rotation_z(as::radians(90.0f));
+    as::mat3 rot3 = as::mat3_rotation_z(as::radians(180.0f));
+    as::mat3 rot4 = as::mat3_rotation_z(as::radians(270.0f));
 
-  as::mat3 rot5 = as::mat3_rotation_y(as::radians(90.0f));
-  as::mat3 rot6 = as::mat3_rotation_y(as::radians(90.0f))
-                * as::mat3_rotation_z(as::radians(90.0f));
-  as::mat3 rot7 = as::mat3_rotation_y(as::radians(90.0f))
-                * as::mat3_rotation_z(as::radians(180.0f));
-  as::mat3 rot8 = as::mat3_rotation_y(as::radians(90.0f))
-                * as::mat3_rotation_z(as::radians(270.0f));
+    as::mat3 rot5 = as::mat3_rotation_y(as::radians(90.0f));
+    as::mat3 rot6 = as::mat3_rotation_y(as::radians(90.0f))
+                  * as::mat3_rotation_z(as::radians(90.0f));
+    as::mat3 rot7 = as::mat3_rotation_y(as::radians(90.0f))
+                  * as::mat3_rotation_z(as::radians(180.0f));
+    as::mat3 rot8 = as::mat3_rotation_y(as::radians(90.0f))
+                  * as::mat3_rotation_z(as::radians(270.0f));
 
-  as::mat3 rot9 = as::mat3_rotation_y(as::radians(180.0f));
-  as::mat3 rot10 = as::mat3_rotation_y(as::radians(180.0f))
-                 * as::mat3_rotation_z(as::radians(90.0f));
-  as::mat3 rot11 = as::mat3_rotation_y(as::radians(180.0f))
-                 * as::mat3_rotation_z(as::radians(180.0f));
-  as::mat3 rot12 = as::mat3_rotation_y(as::radians(180.0f))
-                 * as::mat3_rotation_z(as::radians(270.0f));
+    as::mat3 rot9 = as::mat3_rotation_y(as::radians(180.0f));
+    as::mat3 rot10 = as::mat3_rotation_y(as::radians(180.0f))
+                   * as::mat3_rotation_z(as::radians(90.0f));
+    as::mat3 rot11 = as::mat3_rotation_y(as::radians(180.0f))
+                   * as::mat3_rotation_z(as::radians(180.0f));
+    as::mat3 rot12 = as::mat3_rotation_y(as::radians(180.0f))
+                   * as::mat3_rotation_z(as::radians(270.0f));
 
-  as::mat3 rot13 = as::mat3_rotation_y(as::radians(270.0f));
-  as::mat3 rot14 = as::mat3_rotation_y(as::radians(270.0f))
-                 * as::mat3_rotation_z(as::radians(90.0f));
-  as::mat3 rot15 = as::mat3_rotation_y(as::radians(270.0f))
-                 * as::mat3_rotation_z(as::radians(180.0f));
-  as::mat3 rot16 = as::mat3_rotation_y(as::radians(270.0f))
-                 * as::mat3_rotation_z(as::radians(270.0f));
+    as::mat3 rot13 = as::mat3_rotation_y(as::radians(270.0f));
+    as::mat3 rot14 = as::mat3_rotation_y(as::radians(270.0f))
+                   * as::mat3_rotation_z(as::radians(90.0f));
+    as::mat3 rot15 = as::mat3_rotation_y(as::radians(270.0f))
+                   * as::mat3_rotation_z(as::radians(180.0f));
+    as::mat3 rot16 = as::mat3_rotation_y(as::radians(270.0f))
+                   * as::mat3_rotation_z(as::radians(270.0f));
 
-  as::mat3 rot17 = as::mat3_rotation_x(as::radians(90.0f));
-  as::mat3 rot18 = as::mat3_rotation_x(as::radians(90.0f))
-                 * as::mat3_rotation_z(as::radians(90.0f));
-  as::mat3 rot19 = as::mat3_rotation_x(as::radians(90.0f))
-                 * as::mat3_rotation_z(as::radians(180.0f));
-  as::mat3 rot20 = as::mat3_rotation_x(as::radians(90.0f))
-                 * as::mat3_rotation_z(as::radians(270.0f));
+    as::mat3 rot17 = as::mat3_rotation_x(as::radians(90.0f));
+    as::mat3 rot18 = as::mat3_rotation_x(as::radians(90.0f))
+                   * as::mat3_rotation_z(as::radians(90.0f));
+    as::mat3 rot19 = as::mat3_rotation_x(as::radians(90.0f))
+                   * as::mat3_rotation_z(as::radians(180.0f));
+    as::mat3 rot20 = as::mat3_rotation_x(as::radians(90.0f))
+                   * as::mat3_rotation_z(as::radians(270.0f));
 
-  as::mat3 rot21 = as::mat3_rotation_x(as::radians(-90.0f));
-  as::mat3 rot22 = as::mat3_rotation_x(as::radians(-90.0f))
-                 * as::mat3_rotation_z(as::radians(90.0f));
-  as::mat3 rot23 = as::mat3_rotation_x(as::radians(-90.0f))
-                 * as::mat3_rotation_z(as::radians(180.0f));
-  as::mat3 rot24 = as::mat3_rotation_x(as::radians(-90.0f))
-                 * as::mat3_rotation_z(as::radians(270.0f));
+    as::mat3 rot21 = as::mat3_rotation_x(as::radians(-90.0f));
+    as::mat3 rot22 = as::mat3_rotation_x(as::radians(-90.0f))
+                   * as::mat3_rotation_z(as::radians(90.0f));
+    as::mat3 rot23 = as::mat3_rotation_x(as::radians(-90.0f))
+                   * as::mat3_rotation_z(as::radians(180.0f));
+    as::mat3 rot24 = as::mat3_rotation_x(as::radians(-90.0f))
+                   * as::mat3_rotation_z(as::radians(270.0f));
 
-  std::vector<as::mat3> rotations = {rot1,  rot2,  rot3,  rot4,  rot5,  rot6,
-                                     rot7,  rot8,  rot9,  rot10, rot11, rot12,
-                                     rot13, rot14, rot15, rot16, rot17, rot18,
-                                     rot19, rot20, rot21, rot22, rot23, rot24};
+    rotations = {rot1,  rot2,  rot3,  rot4,  rot5,  rot6,  rot7,  rot8,
+                 rot9,  rot10, rot11, rot12, rot13, rot14, rot15, rot16,
+                 rot17, rot18, rot19, rot20, rot21, rot22, rot23, rot24};
+  }
+
+  {
+    as::mat3 rot1 = as::mat3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    as::mat3 rot2 = as::mat3(1, 0, 0, 0, 0, 1, 0, -1, 0);
+    as::mat3 rot3 = as::mat3(1, 0, 0, 0, -1, 0, 0, 0, -1);
+    as::mat3 rot4 = as::mat3(1, 0, 0, 0, 0, -1, 0, 1, 0);
+//
+    as::mat3 rot5 = as::mat3(0, 1, 0, -1, 0, 0, 0, 0, 1);  // pos
+    as::mat3 rot6 = as::mat3(0, 1, 0, 0, 0, 1, 1, 0, 0);
+    as::mat3 rot7 = as::mat3(0, 1, 0, 1, 0, 0, 0, 0, -1);
+    as::mat3 rot8 = as::mat3(0, 1, 0, 0, 0, -1, -1, 0, 0);
+//
+    as::mat3 rot9 = as::mat3(-1, 0, 0, 0, -1, 0, 0, 0, 1);
+    as::mat3 rot10 = as::mat3(-1, 0, 0, 0, 0, -1, 0, -1, 0);
+    as::mat3 rot11 = as::mat3(-1, 0, 0, 0, 1, 0, 0, 0, -1);
+    as::mat3 rot12 = as::mat3(-1, 0, 0, 0, 0, 1, 0, 1, 0);
+
+    as::mat3 rot13 = as::mat3(0, -1, 0, 1, 0, 0, 0, 0, 1); // pos
+    as::mat3 rot14 = as::mat3(0, -1, 0, 0, 0, -1, 1, 0, 0);
+    as::mat3 rot15 = as::mat3(0, -1, 0, -1, 0, 0, 0, 0, -1);
+    as::mat3 rot16 = as::mat3(0, -1, 0, 0, 0, 1, -1, 0, 0);
+
+    as::mat3 rot17 = as::mat3(0, 0, 1, 0, 1, 0, -1, 0, 0);
+    as::mat3 rot18 = as::mat3(0, 0, 1, 1, 0, 0, 0, 1, 0);
+    as::mat3 rot19 = as::mat3(0, 0, 1, 0, -1, 0, 1, 0, 0);
+    as::mat3 rot20 = as::mat3(0, 0, 1, -1, 0, 0, 0, -1, 0);
+
+    as::mat3 rot21 = as::mat3(0, 0, -1, 0, -1, 0, -1, 0, 0);
+    as::mat3 rot22 = as::mat3(0, 0, -1, -1, 0, 0, 0, 1, 0);
+    as::mat3 rot23 = as::mat3(0, 0, -1, 0, 1, 0, 1, 0, 0);
+    as::mat3 rot24 = as::mat3(0, 0, -1, 1, 0, 0, 0, -1, 0);
+
+    rotations = {rot1,  rot2,  rot3,  rot4,  rot5,  rot6,  rot7,  rot8,
+                 rot9,  rot10, rot11, rot12, rot13, rot14, rot15, rot16,
+                 rot17, rot18, rot19, rot20, rot21, rot22, rot23, rot24};
+
+//    rotations = {rot13};
+//    rotations = {rot5};
+  }
 
   auto generate_orientated_position =
     [](orientation_state_t state, as::vec3i position) {
@@ -235,6 +279,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     {
       as::vec3i pos;
       as::vec3i del;
+      float distance;
     };
 
     {
@@ -244,17 +289,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       // scanner
       for (int s_lhs = 0; s_lhs < scanners.size() - 1; ++s_lhs) {
         for (int s_rhs = s_lhs + 1; s_rhs < scanners.size(); ++s_rhs) {
-//          std::cout << "lhs - " << s_lhs << "rhs - " << s_rhs << '\n';
-//          if (s_lhs == s_rhs) {
-//            continue;
-//          }
           const auto& beacons_lhs = scanners[s_lhs].beacons;
           const auto& beacons_rhs = scanners[s_rhs].beacons;
           std::vector<pos_del> relative_deltas;
           relative_deltas.reserve(beacons_lhs.size());
           for (int b_lhs = 0; b_lhs < beacons_lhs.size(); ++b_lhs) {
-            relative_deltas.push_back(
-              {beacons_lhs[b_lhs], beacons_lhs[b_lhs] - beacons_lhs[0]});
+            relative_deltas.push_back(pos_del{
+              beacons_lhs[b_lhs], beacons_lhs[b_lhs] - beacons_lhs[0],
+              as::vec_distance(
+                vec3_from_vec3i(beacons_lhs[b_lhs]),
+                vec3_from_vec3i(beacons_lhs[0]))});
           }
           for (int rotation_index = 0; rotation_index < rotations.size();
                rotation_index++) {
@@ -273,7 +317,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
               auto first = orientated_beacons_rhs[chosen];
               for (auto& b_rhs : orientated_beacons_rhs) {
-                next_relative_deltas.push_back({b_rhs, b_rhs - first});
+                next_relative_deltas.push_back(pos_del{
+                  b_rhs, b_rhs - first,
+                  as::vec_distance(
+                    vec3_from_vec3i(b_rhs), vec3_from_vec3i(first))});
               }
 
               std::vector<as::vec3i> overlapping;
@@ -284,14 +331,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
                 auto f = std::find_if(
                   next_relative_deltas.begin(), next_relative_deltas.end(),
                   [rel_del](const auto& rd) {
+//                    return as::real_near(rd.distance, rel_del.distance);
                     return rd.del.x == rel_del.del.x
                         && rd.del.y == rel_del.del.y
                         && rd.del.z == rel_del.del.z;
                   });
-                if (count > 2) {
-                  int k;
-                  k = 0;
-                }
                 if (f != next_relative_deltas.end()) {
                   overlapping.push_back(rel_del.pos);
                   position_relative_to_previous_scanner = rel_del.pos - f->pos;
@@ -299,7 +343,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
                 }
               }
 
-              if (count >= 12) {
+              if (count == 12) {
                 scanners[s_rhs].beacons = orientated_beacons_rhs;
                 int a;
                 a = 0;
@@ -451,7 +495,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
                   // break;
                 }
               }
-              if (found == 3) {
+              if (found == 12) {
                 int i;
                 i = 0;
               }
