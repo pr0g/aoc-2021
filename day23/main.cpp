@@ -49,7 +49,11 @@ struct amphipod_t
   }
   [[nodiscard]] bool in_room() const { return pos.y == 2 || pos.y == 3; }
   [[nodiscard]] bool in_home_room() const { return pos.x == home; }
-  [[nodiscard]] bool in_base_home_room() const
+  [[nodiscard]] bool in_top_home_room() const
+  {
+    return in_home_room() && pos.y == 2;
+  }
+  [[nodiscard]] bool in_bottom_home_room() const
   {
     return in_home_room() && pos.y == 3;
   }
@@ -69,6 +73,36 @@ struct situation_t
   std::vector<vec2> hallway;
   std::vector<vec2> rooms;
   std::vector<amphipod_t> amphipods;
+
+  bool can_enter(const amphipod_t& amphipod, vec2 room) const
+  {
+    bool matching = amphipod.home == room.x;
+    auto top_it =
+      std::find_if(spaces.begin(), spaces.end(), [room](const space_t space) {
+        return space.pos == vec2{room.x, 2};
+      });
+    auto bottom_it =
+      std::find_if(spaces.begin(), spaces.end(), [room](const space_t space) {
+        return space.pos == vec2{room.x, 3};
+      });
+    return (top_it->occupant == '.' && bottom_it->occupant == '.'
+            && room.y == 3)
+        || (top_it->occupant == '.' && bottom_it->occupant == amphipod.type
+            && room.y == 2);
+  }
+
+  [[nodiscard]] bool amphipod_settled(const amphipod_t& amphipod) const
+  {
+    if (amphipod.in_top_home_room()) {
+      auto below = amphipod.pos + vec2{0, 1};
+      auto space = std::find_if(
+        spaces.begin(), spaces.end(),
+        [below](const space_t space) { return space.pos == below; });
+      return space->occupant == amphipod.type;
+    }
+
+    return amphipod.in_bottom_home_room();
+  }
 
   [[nodiscard]] bool goal_reached() const
   {
@@ -210,10 +244,19 @@ std::vector<node_t> find_positions(
 
 std::vector<node_t> find_room_positions(
   amphipod_t amphipod, const std::vector<space_t>& all_spaces,
-  const std::vector<vec2>& rooms)
+  const std::vector<vec2>& rooms, const situation_t& situation)
 {
   // note: could then filter by slot/type
-  return find_positions(amphipod, all_spaces, rooms);
+  auto possible_positions = find_positions(amphipod, all_spaces, rooms);
+  possible_positions.erase(
+    std::remove_if(
+      possible_positions.begin(), possible_positions.end(),
+      [amphipod, &situation](const node_t node) {
+        return node.position.x != amphipod.home
+            || !situation.can_enter(amphipod, node.position);
+      }),
+    possible_positions.end());
+  return possible_positions;
 }
 
 std::vector<node_t> find_hallway_positions(
@@ -241,21 +284,55 @@ void update_situation(
   }
 }
 
-void process(situation_t situation)
+void process(situation_t situation, int amphipod_index)
 {
-  auto amphipod_it = std::find_if(
-    situation.amphipods.begin(), situation.amphipods.end(),
-    [](const amphipod_t amphipod) {
-      return !amphipod.in_base_home_room()
-          || (amphipod.in_room() && !amphipod.in_home_room())
-          || amphipod.in_hallway();
-    });
+  auto amphipod_finder_fn = [](const amphipod_t amphipod) {
+    return !amphipod.in_bottom_home_room()
+        || (amphipod.in_room() && !amphipod.in_home_room())
+        || amphipod.in_hallway();
+  };
 
-  if (amphipod_it != situation.amphipods.end()) {
-    //    if (amphipod_it->
-  } else {
-    // in position
+  auto& amphipod = situation.amphipods[amphipod_index];
+  //  auto amphipod_it = std::find_if(
+  //    situation.amphipods.begin(), situation.amphipods.end(),
+  //    amphipod_finder_fn);
+
+  //  if (amphipod_it != situation.amphipods.end()) {
+  if (!amphipod.in_hallway() && !situation.amphipod_settled(amphipod)) {
+    auto moves =
+      find_hallway_positions(amphipod, situation.spaces, situation.hallway);
+    if (moves.empty()) {
+      process(situation, (amphipod_index + 1) % situation.amphipods.size());
+    }
+    for (const auto move : moves) {
+      auto next_situation = situation;
+      auto& next_amphipod = next_situation.amphipods[amphipod_index];
+      //      auto next_amphipod_it = std::find_if(
+      //        next_situation.amphipods.begin(),
+      //        next_situation.amphipods.end(), amphipod_finder_fn);
+      update_situation(next_situation, next_amphipod, move);
+      process(next_situation, amphipod_index);
+    }
+  } else if (amphipod.in_hallway()) {
+    auto moves =
+      find_room_positions(amphipod, situation.spaces, situation.rooms, situation);
+    if (moves.empty()) {
+      process(situation, (amphipod_index + 1) % situation.amphipods.size());
+    }
+    for (const auto move : moves) {
+      auto next_situation = situation;
+      auto& next_amphipod = next_situation.amphipods[amphipod_index];
+      //      auto next_amphipod_it = std::find_if(
+      //        next_situation.amphipods.begin(),
+      //        next_situation.amphipods.end(), amphipod_finder_fn);
+      update_situation(next_situation, next_amphipod, move);
+      process(next_situation, amphipod_index);
+    }
   }
+  //    } else {
+  // in position
+  //    }
+  //  }
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
@@ -271,6 +348,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   }
 
   // need a 'state' that's the goal to check_blocked against
+  // can only move to hallway once, then back to matching room
 
   situation_t situation;
   for (int row = 0; row < lines.size(); ++row) {
@@ -301,6 +379,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
   }
 
+  // test cases
+//  update_situation(situation, situation.amphipods[3], node_t{vec2{8, 1}});
+//  update_situation(situation, situation.amphipods[7], node_t{vec2{10, 1}});
+//  update_situation(situation, situation.amphipods[1], node_t{vec2{4, 1}});
+//  update_situation(situation, situation.amphipods[5], node_t{vec2{6, 1}});
+//  find_room_positions(situation.amphipods[3], situation.spaces, situation.rooms, situation);
+//  update_situation(situation, situation.amphipods[3], node_t{vec2{9, 3}});
+//  find_room_positions(situation.amphipods[5], situation.spaces, situation.rooms, situation);
+
+  process(situation, 0);
+
   std::deque<node_t> path;
 
   //  path.push_back()
@@ -313,7 +402,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   while (!starting_amphipods.empty()) {
     auto amphipod = starting_amphipods.back();
     starting_amphipods.pop_back();
-    if (amphipod.in_room() && !amphipod.in_base_home_room()) {
+    if (amphipod.in_room() && !amphipod.in_bottom_home_room()) {
       auto hallway_positions =
         find_hallway_positions(amphipod, situation.spaces, situation.hallway);
 
@@ -325,41 +414,23 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       i = 0;
     } else if (amphipod.in_hallway()) {
       auto room_positions =
-        find_room_positions(amphipod, situation.spaces, situation.rooms);
+        find_room_positions(amphipod, situation.spaces, situation.rooms, situation);
       int j;
       j = 0;
     }
   }
 
   for (auto& amphipod : situation.amphipods) {
-    //    if (
-    //      (amphipod.type == 'A' && amphipod.pos == vec2{3, 3})
-    //      || (amphipod.type == 'B' && amphipod.pos == vec2{5, 3})
-    //      || (amphipod.type == 'B' && amphipod.pos == vec2{7, 3})
-    //      || (amphipod.type == 'B' && amphipod.pos == vec2{9, 3})) {
-    //      continue;
-    //    }
-
     auto hallway_positions =
       find_hallway_positions(amphipod, situation.spaces, situation.hallway);
-
     auto room_positions_test = find_room_positions(
-      situation.amphipods[4], situation.spaces, situation.rooms);
-
+      situation.amphipods[4], situation.spaces, situation.rooms, situation);
     for (const auto possible_position : hallway_positions) {
       // calculate cost to next position
       update_situation(situation, amphipod, possible_position);
       break;
     }
   }
-
-  // can only move to hallway once, then back to matching room
-
-  auto t1 = manhattan_distance(situation.hallway[0], situation.rooms[0]);
-  auto t2 = manhattan_distance(situation.hallway[3], situation.rooms[6]);
-
-  int i;
-  i = 0;
 
   return 0;
 }
