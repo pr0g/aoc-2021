@@ -13,6 +13,7 @@
 
 namespace alu
 {
+
 enum class register_e
 {
   w,
@@ -28,12 +29,12 @@ struct variable_t
 
 struct literal_t
 {
-  int number;
+  int64_t number;
 };
 
 struct inp_t
 {
-  int number;
+  int64_t number;
   register_e reg;
 };
 
@@ -112,11 +113,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     lines.push_back(std::move(line));
   }
 
-  for (const std::string& str : lines) {
-    std::cout << str << '\n';
-  }
+  // check
+  // for (const std::string& str : lines) {
+  //   std::cout << str << '\n';
+  // }
 
   auto global_input = std::to_string(13579246899999);
+  // auto global_input = std::to_string(79999999999999);
+  // auto global_input = std::to_string(11111111111111);
 
   std::vector<alu::op_t> ops;
   for (const std::string& str : lines) {
@@ -172,13 +176,20 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
   }
 
-  int w = 0;
-  int x = 0;
-  int y = 0;
-  int z = 0;
+  //  for (int d = 1; d <= 9; ++d) {
+  //    if (const auto inp = std::get_if<alu::inp_t>(&ops[0])) {
+  //      inp->number = d;
+  //    }
+  //    for (int64_t i = 0; i < 1000000000; ++i) {
+  //      int64_t starting_z = i;
+  int64_t w = 0;
+  int64_t x = 0;
+  int64_t y = 0;
+  int64_t z = 0;
+  //      int64_t z = i;
 
   auto write_to_register = [&w, &x, &y,
-                            &z](const alu::register_e reg, int number) {
+                            &z](const alu::register_e reg, int64_t number) {
     switch (reg) {
       case alu::register_e::w:
         w = number;
@@ -206,7 +217,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       case alu::register_e::z:
         return z;
     }
-    return 0;
+    return (int64_t)0;
   };
 
   for (const auto op : ops) {
@@ -214,7 +225,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       write_to_register(inp->reg, inp->number);
     } else if (const auto mul = std::get_if<alu::mul_t>(&op)) {
       auto lhs = read_from_register(mul->reg);
-      int rhs = 0;
+      int64_t rhs = 0;
       if (const auto lit = std::get_if<alu::literal_t>(&mul->operand)) {
         rhs = lit->number;
       } else if (const auto var = std::get_if<alu::variable_t>(&mul->operand)) {
@@ -224,7 +235,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       write_to_register(mul->reg, result);
     } else if (const auto eql = std::get_if<alu::eql_t>(&op)) {
       auto lhs = read_from_register(eql->reg);
-      int rhs = 0;
+      int64_t rhs = 0;
       if (const auto lit = std::get_if<alu::literal_t>(&eql->operand)) {
         rhs = lit->number;
       } else if (const auto var = std::get_if<alu::variable_t>(&eql->operand)) {
@@ -237,7 +248,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       }
     } else if (const auto add = std::get_if<alu::add_t>(&op)) {
       auto lhs = read_from_register(add->reg);
-      int rhs = 0;
+      int64_t rhs = 0;
       if (const auto lit = std::get_if<alu::literal_t>(&add->operand)) {
         rhs = lit->number;
       } else if (const auto var = std::get_if<alu::variable_t>(&add->operand)) {
@@ -247,35 +258,48 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
       write_to_register(add->reg, result);
     } else if (const auto div = std::get_if<alu::div_t>(&op)) {
       auto lhs = read_from_register(div->reg);
-      int rhs = 0;
+      int64_t rhs = 0;
       if (const auto lit = std::get_if<alu::literal_t>(&div->operand)) {
         rhs = lit->number;
       } else if (const auto var = std::get_if<alu::variable_t>(&div->operand)) {
         rhs = read_from_register(var->reg);
       }
-      auto result = lhs / rhs;
-      write_to_register(div->reg, result);
+      if (rhs > 0) {
+        auto result = lhs / rhs;
+        write_to_register(div->reg, result);
+      }
     } else if (const auto mod = std::get_if<alu::mod_t>(&op)) {
       auto lhs = read_from_register(mod->reg);
-      int rhs = 0;
+      int64_t rhs = 0;
       if (const auto lit = std::get_if<alu::literal_t>(&mod->operand)) {
         rhs = lit->number;
       } else if (const auto var = std::get_if<alu::variable_t>(&mod->operand)) {
         rhs = read_from_register(var->reg);
       }
-      auto result = lhs % rhs;
-      write_to_register(mod->reg, result);
+      if (lhs >= 0 && rhs > 0) {
+        auto result = lhs % rhs;
+        write_to_register(mod->reg, result);
+      }
     }
+
+    std::cout << "w: " << w << '\n';
+    std::cout << "x: " << x << '\n';
+    std::cout << "y: " << y << '\n';
+    std::cout << "z: " << z << '\n';
+
+    std::cout << "--- \n";
   }
 
-  std::cout << "w: " << w << '\n';
-  std::cout << "x: " << x << '\n';
-  std::cout << "y: " << y << '\n';
-  std::cout << "z: " << z << '\n';
+  //  if (z == 559) {
+  //    std::cout << "starting z: " << starting_z << " digit: " << d << '\n';
+  //    break;
+  //  }
+  //}
+  //}
 
   std::cout << '\n';
 
-  std::cout << "part 1: " << global_input << '\n';
+  // std::cout << "part 1: " << global_input << '\n';
 
   return 0;
 }
