@@ -62,19 +62,18 @@ struct amphipod_t
   char type;
   int home;
 
-  [[nodiscard]] bool in_other_room() const
+  [[nodiscard]] bool in_room() const
   {
-    return in_room() && !in_home_room();
+    return pos.y == 2 || pos.y == 3 || pos.y == 4 || pos.y == 5;
   }
-  [[nodiscard]] bool in_room() const { return pos.y == 2 || pos.y == 3; }
   [[nodiscard]] bool in_home_room() const { return pos.x == home; }
   [[nodiscard]] bool in_top_home_room() const
   {
-    return in_home_room() && pos.y == 2;
+    return in_home_room() && (pos.y == 2 || pos.y == 3 || pos.y == 4);
   }
   [[nodiscard]] bool in_bottom_home_room() const
   {
-    return in_home_room() && pos.y == 3;
+    return in_home_room() && pos.y == 5;
   }
   [[nodiscard]] bool in_hallway() const { return pos.y == 1; }
 };
@@ -126,7 +125,6 @@ struct situation_t
   std::vector<amphipod_t> amphipods;
 
   int path_cost = 0;
-  //  int move_cost = 0;
 
   [[nodiscard]] bool can_enter(const amphipod_t& amphipod, vec2 room) const
   {
@@ -135,24 +133,42 @@ struct situation_t
       std::find_if(spaces.begin(), spaces.end(), [room](const space_t space) {
         return space.pos == vec2{room.x, 2};
       });
-    auto bottom_it =
+    auto top_mid_it =
       std::find_if(spaces.begin(), spaces.end(), [room](const space_t space) {
         return space.pos == vec2{room.x, 3};
       });
+    auto bottom_mid_it =
+      std::find_if(spaces.begin(), spaces.end(), [room](const space_t space) {
+        return space.pos == vec2{room.x, 4};
+      });
+    auto bottom_it =
+      std::find_if(spaces.begin(), spaces.end(), [room](const space_t space) {
+        return space.pos == vec2{room.x, 5};
+      });
     return matching
-        && ((top_it->occupant == '.' && bottom_it->occupant == '.'
-             && room.y == 3)
-            || (top_it->occupant == '.' && bottom_it->occupant == amphipod.type && room.y == 2));
+        && ((top_it->occupant == '.' && top_mid_it->occupant == '.'
+             && bottom_mid_it->occupant == '.' && bottom_it->occupant == '.'
+             && room.y == 5)
+            || (top_it->occupant == '.' && top_mid_it->occupant == '.'
+             && bottom_mid_it->occupant == '.' && bottom_it->occupant == amphipod.type && room.y == 4)
+            || (top_it->occupant == '.' && top_mid_it->occupant == '.'
+             && bottom_mid_it->occupant == amphipod.type && bottom_it->occupant == amphipod.type && room.y == 3)
+            || (top_it->occupant == '.' && top_mid_it->occupant == amphipod.type
+             && bottom_mid_it->occupant == amphipod.type && bottom_it->occupant == amphipod.type && room.y == 2));
   }
 
   [[nodiscard]] bool amphipod_settled(const amphipod_t& amphipod) const
   {
     if (amphipod.in_top_home_room()) {
-      auto below = amphipod.pos + vec2{0, 1};
-      auto space = std::find_if(
-        spaces.begin(), spaces.end(),
-        [below](const space_t space) { return space.pos == below; });
-      return space->occupant == amphipod.type;
+      bool all_same = true;
+      for (int y = amphipod.pos.y, off = 1; y < 5; ++y, ++off) {
+        auto below = amphipod.pos + vec2{0, off};
+        auto space = std::find_if(
+          spaces.begin(), spaces.end(),
+          [below](const space_t space) { return space.pos == below; });
+        all_same &= space->occupant == amphipod.type;
+      }
+      return all_same;
     }
 
     return amphipod.in_bottom_home_room();
@@ -353,25 +369,22 @@ void update_situation(
   }
 }
 
-std::vector<int> g_path_costs;
+int g_best_cost = INT_MAX;
 
-int correct_arrangement(
+void correct_arrangement(
   situation_t situation,
-  std::unordered_set<situation_t, situation_hash_t>& seen_situations)
+  std::unordered_map<situation_t, int, situation_hash_t>& seen_situations)
 {
-  if (situation.goal_reached()) {
-    // std::cout << "score: " << situation.path_cost << '\n';
-    g_path_costs.push_back(situation.path_cost);
-    return situation.path_cost;
+  if (situation.path_cost >= g_best_cost) {
+    return;
   }
 
-  auto amphipod_finder_fn = [](const amphipod_t amphipod) {
-    return !amphipod.in_bottom_home_room()
-        || (amphipod.in_room() && !amphipod.in_home_room())
-        || amphipod.in_hallway();
-  };
+  if (situation.goal_reached()) {
+    if (situation.path_cost < g_best_cost) {
+      g_best_cost = situation.path_cost;
+    }
+  }
 
-  std::vector<situation_t> next_situations;
   for (int amphipod_index = 0; amphipod_index < situation.amphipods.size();
        ++amphipod_index) {
     auto& amphipod = situation.amphipods[amphipod_index];
@@ -388,24 +401,13 @@ int correct_arrangement(
       next_situation.path_cost += move.cost;
       auto& next_amphipod = next_situation.amphipods[amphipod_index];
       update_situation(next_situation, next_amphipod, move);
-      next_situations.push_back(next_situation);
+      auto f = seen_situations.find(next_situation);
+      if (f == seen_situations.end()) {
+        correct_arrangement(next_situation, seen_situations);
+        seen_situations.insert({next_situation, next_situation.path_cost});
+      }
     }
   }
-
-  for (int situation_index = 0; situation_index < next_situations.size();
-       ++situation_index) {
-    auto next_situation = next_situations[situation_index];
-    auto f = seen_situations.find(next_situation);
-    if (f == seen_situations.end()) {
-      seen_situations.insert(next_situation);
-      int cost = correct_arrangement(next_situation, seen_situations);
-    } else {
-      int i;
-      i = 0;
-    }
-  }
-
-  return false;
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
@@ -449,12 +451,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
   }
 
-  std::unordered_set<situation_t, situation_hash_t> seen_situations;
+  std::unordered_map<situation_t, int, situation_hash_t> seen_situations;
   correct_arrangement(situation, seen_situations);
 
-  std::cout << "part 1: "
-            << *std::min_element(g_path_costs.begin(), g_path_costs.end())
-            << '\n';
+  std::cout << "part 2: " << g_best_cost << '\n';
 
   return 0;
 }
