@@ -11,6 +11,13 @@
 #include <variant>
 #include <vector>
 
+template<class T>
+inline void hash_combine(std::size_t& seed, const T& v)
+{
+  std::hash<T> hasher;
+  seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
 struct vec2
 {
   int x;
@@ -31,6 +38,18 @@ bool operator==(const vec2& lhs, const vec2& rhs)
 {
   return lhs.x == rhs.x && lhs.y == rhs.y;
 }
+
+template<>
+struct std::hash<vec2>
+{
+  std::size_t operator()(const vec2& v2) const
+  {
+    std::size_t seed = 0;
+    hash_combine(seed, v2.x);
+    hash_combine(seed, v2.y);
+    return seed;
+  }
+};
 
 int manhattan_distance(vec2 a, vec2 b)
 {
@@ -65,6 +84,33 @@ bool operator==(const amphipod_t& lhs, const amphipod_t& rhs)
   return lhs.pos == rhs.pos && lhs.type == rhs.type && lhs.home == rhs.home;
 }
 
+template<>
+struct std::hash<amphipod_t>
+{
+  std::size_t operator()(const amphipod_t& amphipod) const
+  {
+    std::size_t seed = 0;
+    hash_combine(seed, amphipod.pos);
+    hash_combine(seed, amphipod.type);
+    hash_combine(seed, amphipod.home);
+    return seed;
+  }
+};
+
+template<>
+struct std::hash<std::vector<amphipod_t>>
+{
+  std::size_t operator()(const std::vector<amphipod_t>& amphipods) const
+  {
+    std::size_t seed = 0;
+    for (const auto amphipod : amphipods) {
+      std::hash<amphipod_t> hasher;
+      seed += hasher(amphipod);
+    }
+    return seed;
+  }
+};
+
 struct space_t
 {
   vec2 pos;
@@ -80,7 +126,7 @@ struct situation_t
   std::vector<amphipod_t> amphipods;
 
   int path_cost = 0;
-  int move_cost = 0;
+  //  int move_cost = 0;
 
   [[nodiscard]] bool can_enter(const amphipod_t& amphipod, vec2 room) const
   {
@@ -119,6 +165,22 @@ struct situation_t
       all_home = amphipod.in_home_room() && all_home;
     }
     return all_home;
+  }
+};
+
+bool operator==(const situation_t& lhs, const situation_t& rhs)
+{
+  return lhs.amphipods == rhs.amphipods && lhs.path_cost == rhs.path_cost;
+}
+
+struct situation_hash_t
+{
+  std::size_t operator()(const situation_t& situation) const
+  {
+    std::size_t seed = 0;
+    hash_combine(seed, situation.path_cost);
+    hash_combine(seed, situation.amphipods);
+    return seed;
   }
 };
 
@@ -291,11 +353,15 @@ void update_situation(
   }
 }
 
+std::vector<int> g_path_costs;
+
 int correct_arrangement(
-  situation_t situation, std::vector<situation_t>& seen_situations)
+  situation_t situation,
+  std::unordered_set<situation_t, situation_hash_t>& seen_situations)
 {
   if (situation.goal_reached()) {
-    std::cout << "score: " << situation.path_cost << '\n';
+    // std::cout << "score: " << situation.path_cost << '\n';
+    g_path_costs.push_back(situation.path_cost);
     return situation.path_cost;
   }
 
@@ -329,14 +395,9 @@ int correct_arrangement(
   for (int situation_index = 0; situation_index < next_situations.size();
        ++situation_index) {
     auto next_situation = next_situations[situation_index];
-    auto f = std::find_if(
-      seen_situations.begin(), seen_situations.end(),
-      [next_situation](const situation_t& situation) {
-        return situation.amphipods == next_situation.amphipods
-            && situation.path_cost == next_situation.path_cost;
-      });
+    auto f = seen_situations.find(next_situation);
     if (f == seen_situations.end()) {
-      seen_situations.push_back(next_situation);
+      seen_situations.insert(next_situation);
       int cost = correct_arrangement(next_situation, seen_situations);
     } else {
       int i;
@@ -347,14 +408,6 @@ int correct_arrangement(
   return false;
 }
 
-// from every situation, generate all situations, add to list
-
-// bool correct_arrangement(situation_t situation)
-//{
-//    else {
-//   }
-// }
-
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
   std::ifstream reader("input.txt");
@@ -363,12 +416,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     lines.push_back(std::move(line));
   }
 
-  for (const std::string& str : lines) {
-    std::cout << str << '\n';
-  }
-
-  // need a 'state' that's the goal to check_blocked against
-  // can only move to hallway once, then back to matching room
+  // for (const std::string& str : lines) {
+  //   std::cout << str << '\n';
+  // }
 
   situation_t situation;
   for (int row = 0; row < lines.size(); ++row) {
@@ -399,21 +449,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
   }
 
-  // test cases
-  //  update_situation(situation, situation.amphipods[3], node_t{vec2{8, 1}});
-  //  update_situation(situation, situation.amphipods[7], node_t{vec2{10,
-  //  1}}); update_situation(situation, situation.amphipods[1], node_t{vec2{4,
-  //  1}}); update_situation(situation, situation.amphipods[5], node_t{vec2{6,
-  //  1}}); find_room_positions(situation.amphipods[3], situation.spaces,
-  //  situation.rooms, situation); update_situation(situation,
-  //  situation.amphipods[3], node_t{vec2{9, 3}});
-  //  find_room_positions(situation.amphipods[5], situation.spaces,
-  //  situation.rooms, situation);
-
-  // process(situation, 0);
-
-  std::vector<situation_t> seen_situations;
+  std::unordered_set<situation_t, situation_hash_t> seen_situations;
   correct_arrangement(situation, seen_situations);
+
+  std::cout << "part 1: "
+            << *std::min_element(g_path_costs.begin(), g_path_costs.end())
+            << '\n';
 
   return 0;
 }
