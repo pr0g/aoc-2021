@@ -20,9 +20,9 @@ inline void hash_combine(std::size_t& seed, const T& v)
 
 struct vec3
 {
-  int x;
-  int y;
-  int z;
+  int64_t x;
+  int64_t y;
+  int64_t z;
 };
 
 bool operator==(const vec3& lhs, const vec3& rhs)
@@ -94,32 +94,93 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   // for (const auto& reboot_step : reboot_steps) {
   //   std::cout << (reboot_step.on ? "on" : "off") << " - min: ("
   //             << reboot_step.min.x << ", " << reboot_step.min.y << ", "
-  //             << reboot_step.min.z << "), max: (" << reboot_step.max.x << ", "
+  //             << reboot_step.min.z << "), max: (" << reboot_step.max.x << ",
+  //             "
   //             << reboot_step.max.y << ", " << reboot_step.max.z << ")\n";
   // }
 
-  std::unordered_map<vec3, bool, vec3_hash> cubes;
-  for (const auto& reboot_step : reboot_steps) {
-    if (
-      reboot_step.min.x >= -50 && reboot_step.min.x <= 50
-      && reboot_step.min.y >= -50 && reboot_step.min.y <= 50
-      && reboot_step.min.z >= -50 && reboot_step.min.z <= 50) {
-      for (int z = reboot_step.min.z; z <= reboot_step.max.z; ++z) {
-        for (int y = reboot_step.min.y; y <= reboot_step.max.y; ++y) {
-          for (int x = reboot_step.min.x; x <= reboot_step.max.x; ++x) {
-            if (
-              x >= -50 && x <= 50 && y >= -50 && y <= 50 && z >= -50
-              && z <= 50) {
-              cubes[vec3{x, y, z}] = reboot_step.on;
+  {
+    std::unordered_map<vec3, bool, vec3_hash> cubes;
+    for (const auto& reboot_step : reboot_steps) {
+      if (
+        reboot_step.min.x >= -50 && reboot_step.min.x <= 50
+        && reboot_step.min.y >= -50 && reboot_step.min.y <= 50
+        && reboot_step.min.z >= -50 && reboot_step.min.z <= 50) {
+        for (int z = reboot_step.min.z; z <= reboot_step.max.z; ++z) {
+          for (int y = reboot_step.min.y; y <= reboot_step.max.y; ++y) {
+            for (int x = reboot_step.min.x; x <= reboot_step.max.x; ++x) {
+              if (
+                x >= -50 && x <= 50 && y >= -50 && y <= 50 && z >= -50
+                && z <= 50) {
+                cubes[vec3{x, y, z}] = reboot_step.on;
+              }
             }
           }
         }
+        const auto on_cubes =
+          std::count_if(cubes.begin(), cubes.end(), [](const auto cube) {
+            return cube.second;
+          });
+
+        //        std::cout << on_cubes << '\n';
       }
     }
+
+    const auto on_cubes = std::count_if(
+      cubes.begin(), cubes.end(), [](const auto cube) { return cube.second; });
+
+    std::cout << "part 1: " << on_cubes << '\n';
   }
 
-  const auto on_cubes = std::count_if(
-    cubes.begin(), cubes.end(), [](const auto cube) { return cube.second; });
+  {
+    auto overlaps = [](const reboot_step_t& lhs, const reboot_step_t& rhs) {
+      return (lhs.min.x <= rhs.max.x && lhs.max.x >= rhs.min.x)
+          && (lhs.min.y <= rhs.max.y && lhs.max.y >= rhs.min.y)
+          && (lhs.min.z <= rhs.max.z && lhs.max.z >= rhs.min.z);
+    };
 
-  std::cout << "part 1: " << on_cubes << '\n';
+    auto create_range =
+      [](bool on, const reboot_step_t& lhs, const reboot_step_t& rhs) {
+        reboot_step_t next_reboot_step{};
+        next_reboot_step.min.x = std::max(lhs.min.x, rhs.min.x);
+        next_reboot_step.max.x = std::min(lhs.max.x, rhs.max.x);
+        next_reboot_step.min.y = std::max(lhs.min.y, rhs.min.y);
+        next_reboot_step.max.y = std::min(lhs.max.y, rhs.max.y);
+        next_reboot_step.min.z = std::max(lhs.min.z, rhs.min.z);
+        next_reboot_step.max.z = std::min(lhs.max.z, rhs.max.z);
+        next_reboot_step.on = on;
+        return next_reboot_step;
+      };
+
+    std::vector<reboot_step_t> visited;
+    for (const auto& reboot_step : reboot_steps) {
+      std::vector<reboot_step_t> next;
+      for (const auto& step : visited) {
+        if (overlaps(reboot_step, step)) {
+          next.push_back(create_range(!step.on, reboot_step, step));
+        }
+      }
+      if (reboot_step.on) {
+        next.push_back(reboot_step);
+      }
+      visited.insert(visited.end(), next.begin(), next.end());
+    }
+
+    auto volume = [](const reboot_step_t& reboot_step) {
+      return std::abs(
+        (reboot_step.max.x - reboot_step.min.x + 1)
+        * (reboot_step.max.y - reboot_step.min.y + 1)
+        * (reboot_step.max.z - reboot_step.min.z + 1));
+    };
+
+    uint64_t total = 0;
+    for (const auto& visitor : visited) {
+      if (visitor.on) {
+        total += volume(visitor);
+      } else {
+        total -= volume(visitor);
+      }
+    }
+    std::cout << "part 2: " << total << '\n';
+  }
 }
