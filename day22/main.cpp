@@ -121,8 +121,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
           std::count_if(cubes.begin(), cubes.end(), [](const auto cube) {
             return cube.second;
           });
-
-        //        std::cout << on_cubes << '\n';
       }
     }
 
