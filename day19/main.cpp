@@ -121,8 +121,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   //   }
   // }
 
-  // std::cout << "---\n";
-
   struct scanner_t
   {
     std::vector<as::vec3i> beacons;
@@ -160,6 +158,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
   remaining_scanners.insert(
     remaining_scanners.end(), scanners.begin() + 1, scanners.end());
 
+  std::vector<as::vec3i> scanner_positions(1, as::vec3i::zero());
   while (!remaining_scanners.empty()) {
     for (const auto& found_scanner : found_scanners) {
       for (int remaining_scanner_index = 0;
@@ -178,10 +177,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
           }
           for (const auto& offset : offsets) {
             if (offset.second >= 12) {
+              scanner_positions.push_back(-offset.first);
               scanner_t next_found_scanner;
               for (const auto& remaining_beacon : remaining_scanner.beacons) {
-                const auto adjusted_beacon =
-                  rotatate_point(remaining_beacon, rot) - offset.first;
+                const auto rotated_point =
+                  rotatate_point(remaining_beacon, rot);
+                const auto adjusted_beacon = rotated_point - offset.first;
                 next_found_scanner.beacons.push_back(adjusted_beacon);
                 all_beacons.insert(adjusted_beacon);
               }
@@ -198,5 +199,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     int dummy;
   }
 
+  int64_t max_distance = 0;
+  for (int lhs = 0; lhs < scanner_positions.size() - 1; ++lhs) {
+    for (int rhs = lhs + 1; rhs < scanner_positions.size(); ++rhs) {
+      auto vec = scanner_positions[rhs] - scanner_positions[lhs];
+      auto dist = std::abs(vec.x) + std::abs(vec.y) + std::abs(vec.z);
+      if (dist > max_distance) {
+        max_distance = dist;
+      }
+    }
+  }
+
   std::cout << "part 1: " << all_beacons.size() << '\n';
+  std::cout << "part 2: " << max_distance << '\n';
 }
